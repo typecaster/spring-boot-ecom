@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 public class CategoryController {
     private final CategoryService categoryService;
 
@@ -22,7 +23,7 @@ public class CategoryController {
      *
      * @return a list of categories available
      */
-    @GetMapping("/api/public/categories")
+    @GetMapping("/public/categories")
     public ResponseEntity<List<Category>> getCategories() {
         List<Category> allCategories = categoryService.getAllCategories();
         return new ResponseEntity<>(allCategories, HttpStatus.OK);
@@ -34,13 +35,21 @@ public class CategoryController {
      * @param categories the category to be created
      * @return a success message
      */
-    @PostMapping("/api/public/categories")
+    @PostMapping("/public/categories")
     public ResponseEntity<String> createCategory(@RequestBody List<Category> categories) {
         categoryService.createCategory(categories);
         return new ResponseEntity<>("Category created successfully", HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/api/admin/categories/{categoryId}")
+    /**
+     * Delete a category with the specified ID. This endpoint is only accessible to users with the
+     * {@code ROLE_ADMIN} role.
+     *
+     * @param categoryId the ID of the category to be deleted
+     * @return a success message if the category was found and deleted,
+     *         otherwise a message indicating that the category was not found
+     */
+    @DeleteMapping("/admin/categories/{categoryId}")
     public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
         try {
             String status = categoryService.deleteCategory(categoryId); // Call the deleteCategory method.
@@ -51,7 +60,16 @@ public class CategoryController {
             return new ResponseEntity<>(e.getReason(), e.getStatusCode());
         }
     }
-    @PutMapping("/api/admin/categories/{categoryId}")
+    /**
+     * Updates a category with the specified ID. This endpoint is only accessible to users with the
+     * {@code ROLE_ADMIN} role.
+     *
+     * @param categoryId the ID of the category to be updated
+     * @param category the category to be updated
+     * @return a success message if the category was found and updated,
+     *         otherwise a message indicating that the category was not found
+     */
+    @PutMapping("/admin/categories/{categoryId}")
     public ResponseEntity<String> updateCategory(@PathVariable Long categoryId, @RequestBody Category category) {
         try {
             String status = categoryService.updateCategory(categoryId, category); // Call the updateCategory method.
