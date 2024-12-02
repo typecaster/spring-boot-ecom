@@ -57,4 +57,23 @@ public class CategoryServiceImpl implements CategoryService {
         categories.remove(category);
         return "Category with id: " + categoryId + " was deleted successfully";
     }
+
+    /**
+     * Updates a category with the specified ID.
+     *
+     * @param categoryId the ID of the category to be updated
+     * @param category the category to be updated
+     * @return a success message if the category was found and updated,
+     *         otherwise a message indicating that the category was not found
+     */
+    @Override
+    public String updateCategory(Long categoryId, Category category) {
+        Category existingCategory = categories.stream()
+                .filter(c -> c.getCategoryId().equals(categoryId))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with id: " + categoryId));
+
+        existingCategory.setCategoryName(category.getCategoryName());
+        return "Category with id: " + categoryId + " was updated successfully";
+    }
 }
