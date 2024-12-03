@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Getter
@@ -46,13 +47,11 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public String deleteCategory(Long categoryId) {
-        List<Category> categories = getAllCategories(); // Replace with your actual list of categories>
-        Category category = categories.stream()
-                .filter(c -> c.getCategoryId().equals(categoryId))
-                .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with id: " + categoryId));
+        Optional<Category> category = categoryRepository.findById(categoryId);
 
-        categoryRepository.delete(category);
+        Category deletedCategory = category.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with id: " + categoryId));
+        categoryRepository.delete(deletedCategory);
+
         return "Category with id: " + categoryId + " was deleted successfully";
     }
 
@@ -66,11 +65,8 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public String updateCategory(Long categoryId, Category category) {
-        List<Category> categories = getAllCategories();
-        Category existingCategory = categories.stream()
-                .filter(c -> c.getCategoryId().equals(categoryId))
-                .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with id: " + categoryId));
+        Optional<Category> categoryOptional = categoryRepository.findById(categoryId); // Find the category by ID>
+        Category existingCategory = categoryOptional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with id: " + categoryId));
 
         existingCategory.setCategoryName(category.getCategoryName());
         categoryRepository.save(existingCategory);
