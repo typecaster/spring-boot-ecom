@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -54,14 +53,8 @@ public class CategoryController {
      */
     @DeleteMapping("/admin/categories/{categoryId}")
     public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
-        try {
             String status = categoryService.deleteCategory(categoryId); // Call the deleteCategory method.
             return new ResponseEntity<>(status, HttpStatus.OK);
-//           return ResponseEntity.ok(status);
-//           return ResponseEntity.status(HttpStatus.OK).body(status);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(e.getReason(), e.getStatusCode());
-        }
     }
     /**
      * Updates a category with the specified ID. This endpoint is only accessible to users with the
@@ -73,12 +66,10 @@ public class CategoryController {
      *         otherwise a message indicating that the category was not found
      */
     @PutMapping("/admin/categories/{categoryId}")
-    public ResponseEntity<String> updateCategory(@PathVariable Long categoryId, @RequestBody Category category) {
-        try {
-            String status = categoryService.updateCategory(categoryId, category); // Call the updateCategory method.
-            return new ResponseEntity<>(status, HttpStatus.OK);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(e.getReason(), e.getStatusCode());
-        }
+    public ResponseEntity<String> updateCategory(@PathVariable Long categoryId, @Valid@RequestBody Category category) {
+
+        String status = categoryService.updateCategory(categoryId, category); // Call the updateCategory method.
+        return new ResponseEntity<>(status, HttpStatus.OK);
+
     }
 }
