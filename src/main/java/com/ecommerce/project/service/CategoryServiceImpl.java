@@ -1,5 +1,6 @@
 package com.ecommerce.project.service;
 
+import com.ecommerce.project.exceptions.ApiException;
 import com.ecommerce.project.exceptions.MyResourceNotFoundException;
 import com.ecommerce.project.model.Category;
 import com.ecommerce.project.repositories.CategoryRepository;
@@ -24,7 +25,13 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+
+        List<Category> categories = categoryRepository.findAll();
+
+        if(categories.isEmpty()) {
+            throw new ApiException("No categories found");
+        }
+        return categories;
     }
 
     /**
@@ -34,6 +41,12 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public void createCategory(List<Category> categories) {
+        for (Category category: categories) {
+             Category existingCategory = categoryRepository.findByCategoryName(category.getCategoryName());
+             if(existingCategory != null) {
+                 throw new ApiException("Category with name: " + category.getCategoryName() + " already exists !!!");
+             }
+        }
         categoryRepository.saveAll(categories);
     }
 
