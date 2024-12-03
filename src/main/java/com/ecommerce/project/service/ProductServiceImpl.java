@@ -11,15 +11,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @Getter
@@ -27,10 +24,18 @@ import java.util.UUID;
 public class ProductServiceImpl implements ProductService{
     @Autowired
     private final ModelMapper modelMapper;
+
     @Autowired
     private final ProductRepository productRepository;
+
     @Autowired
     private final CategoryRepository categoryRepository;
+
+    @Autowired
+    private FileService fileService;
+
+    @Value("${project.image}")
+    private String path;
 
     public ProductServiceImpl(ModelMapper modelMapper, ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.modelMapper = modelMapper;
@@ -122,8 +127,7 @@ public class ProductServiceImpl implements ProductService{
                 .orElseThrow(() -> new MyResourceNotFoundException("Product", "productId", productId));
 
         //Upload image to server and get the file name of uploaded image
-        String path = "images/";
-        String fileName = uploadImage(path, image);
+        String fileName = fileService.uploadImage(path, image);
 
         //update the new file name in the product object
         product.setImage(fileName);
@@ -132,31 +136,7 @@ public class ProductServiceImpl implements ProductService{
         Product updatedProduct = productRepository.save(product);
 
         //return updated product
-
         return modelMapper.map(updatedProduct, ProductDTO.class);
     }
 
-    private String uploadImage(String path, MultipartFile file) throws IOException {
-
-        //File names of the current / original file.
-        String originalFilename = file.getOriginalFilename();
-
-        //Generate a unique file name
-        String randomUUID = UUID.randomUUID().toString();
-        assert originalFilename != null;
-        String fileName = randomUUID.concat(originalFilename.substring(originalFilename.lastIndexOf(".")));
-        String filePath = path + File.separator + fileName;
-
-        //Check if path exists or not. If not, create a new directory.
-        File folder = new File(path);
-        if(!folder.exists()) {
-            folder.mkdir();
-        }
-
-        //Upload the file to the server
-        Files.copy(file.getInputStream(), Paths.get(filePath));
-
-        //return the file name of the uploaded file
-        return fileName;
-    }
 }
