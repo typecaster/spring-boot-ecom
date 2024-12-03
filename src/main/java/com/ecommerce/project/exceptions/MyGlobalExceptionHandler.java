@@ -42,4 +42,14 @@ public class MyGlobalExceptionHandler {
         }
         return new ResponseEntity<>(errorMessages, HttpStatus.BAD_REQUEST);
     }
+    /**
+     * Handles exceptions of type MyResourceNotFoundException. Returns the message of the exception with a 404 status code.
+     *
+     * @param e the MyResourceNotFoundException to be handled
+     * @return a ResponseEntity containing the message of the exception and the HttpStatus.NOT_FOUND status code
+     */
+    @ExceptionHandler(MyResourceNotFoundException.class)
+    public ResponseEntity<String> myResourceNotFoundException(MyResourceNotFoundException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+    }
 }

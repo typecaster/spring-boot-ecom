@@ -1,13 +1,12 @@
 package com.ecommerce.project.service;
 
+import com.ecommerce.project.exceptions.MyResourceNotFoundException;
 import com.ecommerce.project.model.Category;
 import com.ecommerce.project.repositories.CategoryRepository;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
     public String deleteCategory(Long categoryId) {
         Optional<Category> category = categoryRepository.findById(categoryId);
 
-        Category deletedCategory = category.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with id: " + categoryId));
+        Category deletedCategory = category.orElseThrow(() ->new MyResourceNotFoundException("Category","categoryId",categoryId));
         categoryRepository.delete(deletedCategory);
 
         return "Category with id: " + categoryId + " was deleted successfully";
@@ -66,7 +65,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public String updateCategory(Long categoryId, Category category) {
         Optional<Category> categoryOptional = categoryRepository.findById(categoryId); // Find the category by ID>
-        Category existingCategory = categoryOptional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with id: " + categoryId));
+        Category existingCategory = categoryOptional.orElseThrow(() -> new MyResourceNotFoundException("Category","categoryId",categoryId));
 
         existingCategory.setCategoryName(category.getCategoryName());
         categoryRepository.save(existingCategory);
