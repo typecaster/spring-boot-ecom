@@ -1,22 +1,22 @@
 package com.ecommerce.project.service;
 
 import com.ecommerce.project.model.Category;
+import com.ecommerce.project.repositories.CategoryRepository;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @Getter
 @Setter
 public class CategoryServiceImpl implements CategoryService {
-    private final List<Category> categories = new ArrayList<>();
-
-    private Long nextId = 1L;
+    @Autowired
+    private CategoryRepository categoryRepository;
     /**
      * Retrieve the list of all categories.
      *
@@ -24,7 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public List<Category> getAllCategories() {
-        return categories;
+        return categoryRepository.findAll();
     }
 
     /**
@@ -34,10 +34,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public void createCategory(List<Category> categories) {
-        for (Category category : categories) {
-            category.setCategoryId( nextId++ );
-            this.categories.add(category);
-        }
+        categoryRepository.saveAll(categories);
     }
 
     /**
@@ -49,12 +46,13 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public String deleteCategory(Long categoryId) {
+        List<Category> categories = getAllCategories(); // Replace with your actual list of categories>
         Category category = categories.stream()
                 .filter(c -> c.getCategoryId().equals(categoryId))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with id: " + categoryId));
 
-        categories.remove(category);
+        categoryRepository.delete(category);
         return "Category with id: " + categoryId + " was deleted successfully";
     }
 
@@ -68,12 +66,14 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public String updateCategory(Long categoryId, Category category) {
+        List<Category> categories = getAllCategories();
         Category existingCategory = categories.stream()
                 .filter(c -> c.getCategoryId().equals(categoryId))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with id: " + categoryId));
 
         existingCategory.setCategoryName(category.getCategoryName());
+        categoryRepository.save(existingCategory);
         return "Category with id: " + categoryId + " was updated successfully";
     }
 }
