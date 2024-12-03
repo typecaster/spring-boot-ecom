@@ -1,14 +1,13 @@
 package com.ecommerce.project.controller;
 
-import com.ecommerce.project.model.Category;
+import com.ecommerce.project.payload.CategoryDTO;
+import com.ecommerce.project.payload.CategoryResponse;
 import com.ecommerce.project.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Validated
 @RestController
@@ -26,21 +25,21 @@ public class CategoryController {
      * @return a list of categories available
      */
     @GetMapping("/public/categories")
-    public ResponseEntity<List<Category>> getCategories() {
-        List<Category> allCategories = categoryService.getAllCategories();
+    public ResponseEntity<CategoryResponse> getCategories() {
+        CategoryResponse allCategories = categoryService.getAllCategories();
         return new ResponseEntity<>(allCategories, HttpStatus.OK);
     }
     /**
      * Create a new category. This endpoint is only accessible to users with the
      * {@code ROLE_ADMIN} role.
      *
-     * @param categories the category to be created
+     * @param category the category to be created
      * @return a success message
      */
     @PostMapping("/public/categories")
-    public ResponseEntity<String> createCategory(@RequestBody List<@Valid Category> categories) {
-        categoryService.createCategory(categories);
-        return new ResponseEntity<>("Category created successfully", HttpStatus.CREATED);
+    public ResponseEntity<CategoryDTO> createCategory(@RequestBody @Valid CategoryDTO category) {
+        CategoryDTO createdCategory = categoryService.createCategory(category);
+        return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
     }
 
     /**
@@ -52,24 +51,24 @@ public class CategoryController {
      *         otherwise a message indicating that the category was not found
      */
     @DeleteMapping("/admin/categories/{categoryId}")
-    public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
-            String status = categoryService.deleteCategory(categoryId); // Call the deleteCategory method.
-            return new ResponseEntity<>(status, HttpStatus.OK);
+    public ResponseEntity<CategoryDTO> deleteCategory(@PathVariable Long categoryId) {
+            CategoryDTO deletedCategoryDTO = categoryService.deleteCategory(categoryId); // Call the deleteCategory method.
+            return new ResponseEntity<>(deletedCategoryDTO, HttpStatus.OK);
     }
     /**
      * Updates a category with the specified ID. This endpoint is only accessible to users with the
      * {@code ROLE_ADMIN} role.
      *
      * @param categoryId the ID of the category to be updated
-     * @param category the category to be updated
+     * @param categoryDTO the category to be updated
      * @return a success message if the category was found and updated,
      *         otherwise a message indicating that the category was not found
      */
     @PutMapping("/admin/categories/{categoryId}")
-    public ResponseEntity<String> updateCategory(@PathVariable Long categoryId, @Valid@RequestBody Category category) {
+    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long categoryId, @Valid@RequestBody CategoryDTO categoryDTO) {
 
-        String status = categoryService.updateCategory(categoryId, category); // Call the updateCategory method.
-        return new ResponseEntity<>(status, HttpStatus.OK);
+        CategoryDTO updateCategory = categoryService.updateCategory(categoryId, categoryDTO); // Call the updateCategory method.
+        return new ResponseEntity<>(updateCategory, HttpStatus.OK);
 
     }
 }
