@@ -18,7 +18,7 @@ import java.util.List;
 @Service
 @Getter
 @Setter
-public class PrductServiceImpl implements ProductService{
+public class ProductServiceImpl implements ProductService{
     @Autowired
     private final ModelMapper modelMapper;
     @Autowired
@@ -26,7 +26,7 @@ public class PrductServiceImpl implements ProductService{
     @Autowired
     private final CategoryRepository categoryRepository;
 
-    public PrductServiceImpl(ModelMapper modelMapper, ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public ProductServiceImpl(ModelMapper modelMapper, ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.modelMapper = modelMapper;
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
@@ -46,6 +46,31 @@ public class PrductServiceImpl implements ProductService{
     @Override
     public ProductResponse getAllProducts() {
         List<Product> allProducts = productRepository.findAll();
+        List<ProductDTO> productDTOS = allProducts.stream()
+                .map(product -> modelMapper.map(product, ProductDTO.class))
+                .toList();
+        ProductResponse productResponse = new ProductResponse();
+        productResponse.setContent(productDTOS);
+        return productResponse;
+    }
+
+    @Override
+    public ProductResponse getAllProductsByCategory(Long categoryId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new MyResourceNotFoundException("Category", "categoryId", categoryId));
+        List<Product> allProducts = productRepository.findByCategoryOrderByPriceAsc(category);
+        List<ProductDTO> productDTOS = allProducts.stream()
+                .map(product -> modelMapper.map(product, ProductDTO.class))
+                .toList();
+        ProductResponse productResponse = new ProductResponse();
+        productResponse.setContent(productDTOS);
+        return productResponse;
+    }
+
+    @Override
+    public ProductResponse getProductByKeyword(String keyword) {
+
+        List<Product> allProducts = productRepository.findByProductNameLikeIgnoreCase('%'+keyword+'%');
         List<ProductDTO> productDTOS = allProducts.stream()
                 .map(product -> modelMapper.map(product, ProductDTO.class))
                 .toList();

@@ -30,4 +30,13 @@ public class ProductController {
     public ResponseEntity<ProductResponse> getAllProducts() {
         return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
     }
+
+    @GetMapping("/public/categories/{categoryId}/products")
+    public ResponseEntity<ProductResponse> getProductsByCategory(@PathVariable Long categoryId) {
+        return new ResponseEntity<>(productService.getAllProductsByCategory(categoryId), HttpStatus.OK);
+    }
+    @GetMapping("/public/products/keyword/{keyword}")
+    public ResponseEntity<ProductResponse> getProductByKeyword(@PathVariable String keyword) {
+        return new ResponseEntity<>(productService.getProductByKeyword(keyword), HttpStatus.FOUND);
+    }
 }
