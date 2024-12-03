@@ -13,6 +13,10 @@ import lombok.Setter;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,73 +53,87 @@ public class ProductServiceImpl implements ProductService{
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new MyResourceNotFoundException("Category", "categoryId", categoryId));
 
-        boolean isProductNotPresent = true;
-        List<Product> allProducts = category.getProducts();
-        for (Product product : allProducts) {
-            if (product.getProductName().equals(productDTO.getProductName())) {
-                isProductNotPresent = false;
-                break;
-            }
-        }
-        if (isProductNotPresent) {
+        if (category.getProducts().stream()
+                .noneMatch(product -> product.getProductName().equals(productDTO.getProductName()))) {
             Product product = modelMapper.map(productDTO, Product.class);
             product.setCategory(category);
             product.setImage("default.png");
             product.setSpecialPrice(product.getPrice() - (product.getDiscount() * product.getPrice() * 0.01));
 
-            Product savedProduct = productRepository.save(product);
-            return modelMapper.map(savedProduct, ProductDTO.class);
-        } else
+            return modelMapper.map(productRepository.save(product), ProductDTO.class);
+        } else {
             throw new RuntimeException("Product with name " + productDTO.getProductName() + " already exists");
+        }
     }
 
     @Override
-    public ProductResponse getAllProducts() {
-        //check if product size is 0
-        List<Product> allProducts = productRepository.findAll();
-        List<ProductDTO> productDTOS = allProducts.stream()
-                .map(product -> modelMapper.map(product, ProductDTO.class))
-                .toList();
-        ProductResponse productResponse = new ProductResponse();
-        productResponse.setContent(productDTOS);
-        return productResponse;
+    public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+        Page<Product> productPage = productRepository.findAll(pageDetails);
+
+        List<Product> allProducts = productPage.getContent();
+
+        if (allProducts.isEmpty()) {
+            throw new ApiException("No products found");
+        }
+
+        return getProductResponseDTOs(productPage, allProducts);
     }
 
     @Override
-    public ProductResponse getAllProductsByCategory(Long categoryId) {
+    public ProductResponse getAllProductsByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
 
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new MyResourceNotFoundException("Category", "categoryId", categoryId));
 
-        List<Product> allProducts = productRepository.findByCategoryOrderByPriceAsc(category);
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+        Page<Product> productPage = productRepository.findByCategoryOrderByPriceAsc(category, pageDetails);
+        List<Product> allProducts = productPage.getContent();
+
         if (allProducts.isEmpty()) {
             throw new ApiException("No products found for this category");
         }
 
+        return getProductResponseDTOs(productPage, allProducts);
+    }
+
+    private ProductResponse getProductResponseDTOs(Page<Product> productPage, List<Product> allProducts) {
         List<ProductDTO> productDTOS = allProducts.stream()
                 .map(product -> modelMapper.map(product, ProductDTO.class))
                 .toList();
 
         ProductResponse productResponse = new ProductResponse();
         productResponse.setContent(productDTOS);
+        productResponse.setPageNumber(productPage.getNumber());
+        productResponse.setPageSize(productPage.getSize());
+        productResponse.setTotalElements(productPage.getTotalElements());
+        productResponse.setTotalPages(productPage.getTotalPages());
+        productResponse.setLastPage(productPage.isLast());
         return productResponse;
     }
 
     @Override
-    public ProductResponse getProductByKeyword(String keyword) {
-//check if product size is 0
-        List<Product> allProducts = productRepository.findByProductNameLikeIgnoreCase('%'+keyword+'%');
+    public ProductResponse getProductByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+        Page<Product> productPage = productRepository.findByProductNameLikeIgnoreCase('%' + keyword + '%', pageDetails);
+        List<Product> allProducts = productPage.getContent();
 
         if (allProducts.isEmpty()) {
-            throw new ApiException("No products found for this category");
+            throw new ApiException("No products found for this keyword");
         }
 
-        List<ProductDTO> productDTOS = allProducts.stream()
-                .map(product -> modelMapper.map(product, ProductDTO.class))
-                .toList();
-        ProductResponse productResponse = new ProductResponse();
-        productResponse.setContent(productDTOS);
-        return productResponse;
+        return getProductResponseDTOs(productPage, allProducts);
     }
 
     @Override
