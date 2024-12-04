@@ -20,4 +20,8 @@ public class Role {
     @Enumerated(EnumType.STRING)
     @Column(name = "role_name", length = 20)
     private AppRole roleName;
+
+    public Role(AppRole roleName) {
+        this.roleName = roleName;
+    }
 }
