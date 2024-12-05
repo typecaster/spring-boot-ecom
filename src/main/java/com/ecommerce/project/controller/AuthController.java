@@ -138,7 +138,7 @@ public class AuthController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity<UserInfoResponse> currentUserDetails(Authentication authentication) {
+    public ResponseEntity<?> currentUserDetails(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -149,7 +149,7 @@ public class AuthController {
     }
 
     @PostMapping("/signout")
-    public ResponseEntity<MessageResponse> signoutUser() {
+    public ResponseEntity<?> signoutUser() {
         ResponseCookie cookie = jwtUtils.getCleanJwtCookie();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
